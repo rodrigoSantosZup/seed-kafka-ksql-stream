@@ -1,0 +1,51 @@
+https://docs.ksqldb.io/en/latest/concepts/queries/
+
+KSQLDB (ksqldb container)
+PUSH QUERIES
+KSQLDB 5.4 onwards needs "emit changes"
+Example: "select column1, column2, from user_stream emit changes"
+
+BASICS
+    1 - List
+    list topics;
+    list streams;
+
+    2 - Print newest messages arriving to any topic.
+    print 'USERS';
+
+    3 - Print some topic from the beginning and keep waiting for newest.
+    print 'USERS' from beginning;
+
+    4- Print with limit and don't wait for the newest.
+    print 'USERS' from beginning limit 2;
+
+    5 - Print with limit and interval.
+    print 'USERS' from beginning interval 2 limit 2;
+
+    6 - create a stream with default separator (comma).
+    create stream users_stream (name VARCHAR, countrycode VARCHAR) with (KAFKA_TOPIC='USERS', VALUE_FORMAT='DELIMITED');
+
+    7 - select stream, just for the newest.
+    select * from users_stream emit changes;
+        7.1 To select the offset.
+        SET 'auto.offset.reset' = 'earliest';
+        UNSET 'auto.offset.reset'
+
+        7.2 OBS: Remenber, if any data does not be pattern, not delimited by comma, your select will not appear this data.
+
+    8 - Select stream with limit.
+    select name, countrycode from users_stream emit changes limit 4;
+
+    9 - Select stream with agregation.
+    select countrycode, count(1) from users_stream emit changes group by countrycode;
+
+    10 - Drop stream and drop the topic
+    drop stream if exists users_stream delete topic;
+
+
+KAFKA (Kafka container)
+1 - Create topic.
+kafka-topics --bootstrap-server=localhost:9092 --create --partitions 1 --replication-factor 1 --topic USERS
+
+2 - Create producer to send messages.
+kafka-console-producer --broker-list=localhost:9092 --topic=USERS
