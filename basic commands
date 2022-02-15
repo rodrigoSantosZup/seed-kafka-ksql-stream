@@ -3,7 +3,7 @@ https://docs.ksqldb.io/en/latest/concepts/queries/
 KSQLDB (ksqldb container)
 PUSH QUERIES
 KSQLDB 5.4 onwards needs "emit changes"
-Example: "select column1, column2, from user_stream emit changes"
+Example: "select column1, column2, from user_stream emit changes;"
 
 BASICS
     1 - List
@@ -22,11 +22,16 @@ BASICS
     5 - Print with limit and interval.
     print 'USERS' from beginning interval 2 limit 2;
 
-    6 - create a stream with default separator (comma).
+    6 - Create streams
+    6.1 Create a stream with default separator (comma).
     create stream users_stream (name VARCHAR, countrycode VARCHAR) with (KAFKA_TOPIC='USERS', VALUE_FORMAT='DELIMITED');
+
+    6.2 Create a stream with json formatter.
+    create stream userprofile (userid INT, firstname VARCHAR, rating DOUBLE) with (VALUE_FORMAT='JSON', KAFKA_TOPIC = 'USERPROFILE')
 
     7 - select stream, just for the newest.
     select * from users_stream emit changes;
+
         7.1 To select the offset.
         SET 'auto.offset.reset' = 'earliest';
         UNSET 'auto.offset.reset'
@@ -42,6 +47,9 @@ BASICS
     10 - Drop stream and drop the topic
     drop stream if exists users_stream delete topic;
 
+    11 - To describe a stream.
+    describe USERPROFILE;
+
 
 KAFKA (Kafka container)
 1 - Create topic.
@@ -49,3 +57,6 @@ kafka-topics --bootstrap-server=localhost:9092 --create --partitions 1 --replica
 
 2 - Create producer to send messages.
 kafka-console-producer --broker-list=localhost:9092 --topic=USERS
+
+PAYLOAD
+{}
