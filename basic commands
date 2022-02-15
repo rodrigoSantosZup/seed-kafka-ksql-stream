@@ -1,4 +1,5 @@
 https://docs.ksqldb.io/en/latest/concepts/queries/
+https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-reference/select-pull-query/
 
 KSQLDB (ksqldb container)
 PUSH QUERIES
@@ -50,6 +51,9 @@ BASICS
     11 - To describe a stream.
     describe USERPROFILE;
 
+    12 - Select and filter by field;
+    select * from userprofile where (FIRSTNAME = 'Rodrigo') emit changes;
+
 
 KAFKA (Kafka container)
 1 - Create topic.
@@ -59,4 +63,5 @@ kafka-topics --bootstrap-server=localhost:9092 --create --partitions 1 --replica
 kafka-console-producer --broker-list=localhost:9092 --topic=USERS
 
 PAYLOAD
-{}
+{"userid":1, "firstname":"Rodrigo", "rating":9.9}
+{"userid":2, "firstname":"Luna", "rating":9.9}
