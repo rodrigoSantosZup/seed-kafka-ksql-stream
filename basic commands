@@ -1,15 +1,23 @@
 https://docs.ksqldb.io/en/latest/concepts/queries/
 https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-reference/select-pull-query/
+https://developer.confluent.io/patterns/compositional-patterns/pipeline
+https://developer.confluent.io/patterns
 
 KSQLDB (ksqldb container)
 PUSH QUERIES
 KSQLDB 5.4 onwards needs "emit changes"
 Example: "select column1, column2, from user_stream emit changes;"
 
+OBS:
+    1 - when topic created with a delimited pattern, one table to get data from this topic must have the same pattern
+    2 - a table from topic it's not possible to do pull queries
+    3 - when u make a table from other table with a select body, this table is possible to do pull queries
+
 BASICS
     1 - List
     list topics;
     list streams;
+    list tables;
 
     2 - Print newest messages arriving to any topic.
     print 'USERS';
@@ -35,7 +43,7 @@ BASICS
 
         7.1 To select the offset.
         SET 'auto.offset.reset' = 'earliest';
-        UNSET 'auto.offset.reset'
+        UNSET 'auto.offset.reset';
 
         7.2 OBS: Remenber, if any data does not be pattern, not delimited by comma, your select will not appear this data.
 
@@ -43,24 +51,39 @@ BASICS
     select name, countrycode from users_stream emit changes limit 4;
 
     9 - Select stream with agregation.
-    select countrycode, count(1) from users_stream emit changes group by countrycode;
+    select countrycode, count(1) from users_stream group by countrycode emit changes;
 
     10 - Drop stream and drop the topic
     drop stream if exists users_stream delete topic;
 
-    11 - To describe a stream.
+    11 - To describe a stream, table.
     describe USERPROFILE;
+    describe countrytable;
+    describe extended countrytable;
 
-    12 - Select and filter by field;
+    12 - Select and filter by field.
     select * from userprofile where (FIRSTNAME = 'Rodrigo') emit changes;
+
+    13 - Select using function to parse date.
+    select TIMESTAMPTOSTRING(rowtime, 'dd/MM HH:mm') as data from userprofile emit changes;
+
+    14 - Create table with primary key from topic
+    create table countrytable (countrycode VARCHAR PRIMARY KEY, countryname VARCHAR) with (KAFKA_TOPIC='countrycsv', VALUE_FORMAT='DELIMITED');
+
+    15 - Update data
+        15.1 when u push a message to any topic tha has a table with key, if you push the same key once inserted before, the select on table will be updated.
+
 
 
 KAFKA (Kafka container)
 1 - Create topic.
 kafka-topics --bootstrap-server=localhost:9092 --create --partitions 1 --replication-factor 1 --topic USERS
+kafka-topics --create --topic=country-csv --bootstrap-server=localhost:9092 --partitions=1
 
 2 - Create producer to send messages.
 kafka-console-producer --broker-list=localhost:9092 --topic=USERS
+kafka-console-producer --broker-list=localhost:9092 --topic=country-csv --property "parse.key=true" --property "key.separator=:"
+kafka-console-producer --broker-list=localhost:9092 --topic=countrycsv --property "parse.key=true" --property "key.separator=:"
 
 PAYLOAD
 {"userid":1, "firstname":"Rodrigo", "rating":9.9}
