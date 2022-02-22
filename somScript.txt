@@ -1,0 +1,94 @@
+Script KAFKA
+kafka-topics --bootstrap-server=localhost:9092 --create --partitions 1 --replication-factor 1 --topic service-order-renewal
+
+Script KSQL
+
+{"header": {"eventId":123456, "eventType":"COUNTER_AND_THRESHOLD_UPDATED"}}
+
+1 - Stream principal
+
+CREATE STREAM SERVICE_ORDER_STREAM (
+  header STRUCT<
+    eventId VARCHAR,
+    eventType VARCHAR,
+    context STRUCT<
+      localTrackingId VARCHAR,
+      globalTrackingId VARCHAR,
+      organization VARCHAR,
+      application VARCHAR,
+      channel VARCHAR,
+      custom VARCHAR>,
+    timestamp VARCHAR,
+    domain VARCHAR>,
+  payload VARCHAR
+) WITH (
+  KAFKA_TOPIC = 'service-order-renewal',
+  VALUE_FORMAT='JSON',
+  partitions=1
+);
+
+2 - Criar Stream que processa o install entitlement;
+CREATE STREAM INSTALL_ENTITLEMENT_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_CREATED';
+
+3 - Criar Stream que processa o install wifi;
+CREATE STREAM INSTALL_WIFI_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'INTITLEMENT_INSTALLED';
+
+3 - Criar Stream que processa o install recon:
+CREATE STREAM INSTALL_RECON_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'WIFI_INSTALLED';
+
+4 - Criar Stream que gera o START_SERVICE_ORDER_ITEMS_STREAM:
+CREATE STREAM START_SERVICE_ORDER_ITEMS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'RECON_INSTALLED';
+
+5 - Criar Stream que gera o UPDATE_OFFER_STREAM:
+CREATE STREAM UPDATE_OFFER_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_ITEM_CS_STARTED';
+
+6 - Criar Stream que gera o REFILL_DA_STREAM:
+CREATE STREAM REFILL_DA_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'OFFER_UPDATED_WITH_DA_PROFILE';
+
+7 - Criar Stream que gera o UPDATE_BALANCE_AND_DATE_STREAM:
+CREATE STREAM UPDATE_BALANCE_AND_DATE_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'REFILL_DA_UPDATED';
+
+8 - Criar Stream que gera o INSTALL_VAS_STREAM:
+CREATE STREAM INSTALL_VAS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_ITEM_VAS_STARTED';
+
+9 - Criar Stream que gera o UPDATE_COUNTER_AND_THRESHOLD_STREAM:
+------------ COMPLEX ------------
+TODO
+
+10 - Criar Stream que gera o REFILL_MA_STREAM:
+CREATE STREAM REFILL_MA_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'COUNTER_AND_THRESHOLD_UPDATED';
+
+11 - Criar Stream que gera o SERVICE_ORDER_COMPLETED_STREAM:
+CREATE STREAM SERVICE_ORDER_COMPLETED_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_ITEMS_COMPLETED';
+
+12 - Criar Stream que gera o UNINSTALL_OFFER_CS_STREAM:
+CREATE STREAM UNINSTALL_OFFER_CS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_UNINSTALL_CREATED';
+
+13 - Criar Stream que gera o UNINSTALL_VAS_STREAM:
+CREATE STREAM UNINSTALL_VAS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_CS_UNINSTALLED';
+
+14 - Criar Stream que gera o USER_NOTIFICATION_STREAM:
+CREATE STREAM USER_NOTIFICATION_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'USER_NOTIFY_CREATED';
+
+15 - Criar Stream que gera o SETUP_BONUS_STREAM:
+CREATE STREAM SETUP_BONUS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'BONUS_CREATED';
+
+16 - Criar Stream que gera o CHECKOUT_CARD_BONUS_STREAM:
+CREATE STREAM CHECKOUT_CARD_BONUS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'CARD_BONUS_STARTED';
+
+17 - Criar Stream que gera o CHECKOUT_NEW_CUSTOMER_BONUS_STREAM:
+CREATE STREAM CHECKOUT_NEW_CUSTOMER_BONUS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'NEW_CUSTOMER_BONUS_STARTED';
+
+18 - Criar Stream que gera o CHECKOUT_MIGRATION_BONUS_STREAM:
+CREATE STREAM CHECKOUT_MIGRATION_BONUS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'MIGRATION_BONUS_STARTED';
+
+19 - Criar Stream que gera o CARD_BONUS_COMPLETED_STREAM:
+CREATE STREAM CARD_BONUS_COMPLETED_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'CARD_BONUS_CHECKED_OUT';
+
+20 - Criar Stream que gera o NEW_CUSTOMER_COMPLETED_STREAM:
+CREATE STREAM NEW_CUSTOMER_COMPLETED_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'NEW_CUSTOMER_CHECKED_OUT';
+
+21 - Criar Stream que gera o RW_COM_CALLBACK_STREAM:
+CREATE STREAM RW_COM_CALLBACK_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'RW_COM_CALLBACK_CREATED';
+
+

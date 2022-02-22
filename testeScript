@@ -1,0 +1,31 @@
+CREATE STREAM CUSTOMER_ORDER_STREAM (
+  header STRUCT<
+    eventId VARCHAR,
+    eventType VARCHAR,
+    context STRUCT<
+      localTrackingId VARCHAR,
+      globalTrackingId VARCHAR,
+      organization VARCHAR,
+      application VARCHAR,
+      channel VARCHAR,
+      custom VARCHAR>,
+    timestamp VARCHAR,
+    domain VARCHAR>,
+  payload VARCHAR
+) WITH (
+  KAFKA_TOPIC = 'customer-order-renewal',
+  VALUE_FORMAT='JSON',
+  partitions=10
+);
+
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_1  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'customer-order-inprogress';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_2  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'get-products-on-cim';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_3  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'get-offer-parameters-on-cms';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_4  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'async-payment';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_5  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'register-offer-on-cim';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_6  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'register-offer-item-on-cim';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_7  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'install-offer-on-som';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_8  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'update-offer-item-on-cim';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_9  WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'activate-offer-on-cim';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_10 WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'callback-subscription-renewal';
+CREATE STREAM CUSTOMER_ORDER_RENEWAL_STREAM_TASK_11 WITH (partitions=10) AS SELECT header, payload FROM CUSTOMER_ORDER_STREAM WHERE header->eventType = 'customer-order-status-completed';

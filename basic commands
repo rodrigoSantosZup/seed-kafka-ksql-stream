@@ -2,6 +2,8 @@ https://docs.ksqldb.io/en/latest/concepts/queries/
 https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-reference/select-pull-query/
 https://developer.confluent.io/patterns/compositional-patterns/pipeline
 https://developer.confluent.io/patterns
+https://developer.confluent.io/tutorials/change-topic-partitions-replicas/ksql.html
+https://www.instaclustr.com/support/documentation/kafka/accessing-and-using-kafka/topic-management/
 
 KSQLDB (ksqldb container)
 PUSH QUERIES
