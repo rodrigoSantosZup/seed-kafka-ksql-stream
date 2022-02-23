@@ -3,7 +3,7 @@ kafka-topics --bootstrap-server=localhost:9092 --create --partitions 1 --replica
 
 Script KSQL
 
-{"header": {"eventId":123456, "eventType":"COUNTER_AND_THRESHOLD_UPDATED"}}
+{"header": {"eventId":20, "eventType":"SERVICE_ORDER_CREATED"}, "payload": {"teste1": 1}}
 
 1 - Stream principal
 
@@ -39,6 +39,7 @@ CREATE STREAM INSTALL_RECON_STREAM WITH (partitions=1) AS SELECT header, payload
 4 - Criar Stream que gera o START_SERVICE_ORDER_ITEMS_STREAM:
 CREATE STREAM START_SERVICE_ORDER_ITEMS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'RECON_INSTALLED';
 
+ONE TO ONE
 5 - Criar Stream que gera o UPDATE_OFFER_STREAM:
 CREATE STREAM UPDATE_OFFER_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_ITEM_CS_STARTED';
 
@@ -51,9 +52,11 @@ CREATE STREAM UPDATE_BALANCE_AND_DATE_STREAM WITH (partitions=1) AS SELECT heade
 8 - Criar Stream que gera o INSTALL_VAS_STREAM:
 CREATE STREAM INSTALL_VAS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_ITEM_VAS_STARTED';
 
+8/9 - Criar stream que valida se todos os itens estão completos;
+CREATE STREAM HALF_FINISHED_SERVICE_ORDER_ITEMS_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType in ('OFFER_UPDATED_WITHOUT_DA_PROFILE', 'VAS_INSTALLED', 'BALANCE_AND_DATE_UPDATED');
+
 9 - Criar Stream que gera o UPDATE_COUNTER_AND_THRESHOLD_STREAM:
------------- COMPLEX ------------
-TODO
+CREATE STREAM UPDATE_COUNTER_AND_THRESHOLD_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'SERVICE_ORDER_ITEMS_HALF_COMPLETED';
 
 10 - Criar Stream que gera o REFILL_MA_STREAM:
 CREATE STREAM REFILL_MA_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'COUNTER_AND_THRESHOLD_UPDATED';
@@ -90,5 +93,10 @@ CREATE STREAM NEW_CUSTOMER_COMPLETED_STREAM WITH (partitions=1) AS SELECT header
 
 21 - Criar Stream que gera o RW_COM_CALLBACK_STREAM:
 CREATE STREAM RW_COM_CALLBACK_STREAM WITH (partitions=1) AS SELECT header, payload FROM SERVICE_ORDER_STREAM WHERE header->eventType = 'RW_COM_CALLBACK_CREATED';
+
+KSQL AGG
+
+create table service_order_aggregation WITH (partitions=1) AS
+select header->eventId, COLLECT_LIST('{"eventType": "' + header->eventType + '", "payload": ' + payload + '}') from SERVICE_ORDER_STREAM group by header->eventId emit changes;
 
 

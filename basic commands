@@ -90,3 +90,26 @@ kafka-console-producer --broker-list=localhost:9092 --topic=countrycsv --propert
 PAYLOAD
 {"userid":1, "firstname":"Rodrigo", "rating":9.9}
 {"userid":2, "firstname":"Luna", "rating":9.9}
+
+ERRO
+create table teste_count_events as
+SELECT header->eventId,
+       sum(case when header->eventType in ('OFFER_UPDATED_WITHOUT_DA_PROFILE', 'BALANCE_AND_DATE_UPDATED', 'VAS_INSTALLED') then 1 else 0 end) as qtd_items_completed
+   from SERVICE_ORDER_STREAM
+  group by header->eventId
+  having sum(case when header->eventType in ('OFFER_UPDATED_WITHOUT_DA_PROFILE', 'BALANCE_AND_DATE_UPDATED', 'VAS_INSTALLED') then 1 else 0 end) = 3
+   emit changes
+;
+
+ERRO
+CREATE STREAM teste_inner_stream_v1 WITH (partitions=1) AS
+SELECT header, payload, teste_count_events.eventId, teste_count_events.are_items_completed
+FROM SERVICE_ORDER_STREAM inner join teste_count_events on teste_count_events.eventId = header->eventId
+emit changes;
+
+select header->eventId, count(1) from SERVICE_ORDER_STREAM group by header->eventId
+
+
+
+
+
